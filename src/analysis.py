@@ -42,10 +42,11 @@ the list size is fixed. overflow items will be discarded
 
 
 
-pathname = 'C:\\Users\Joshua\Downloads\driving.json'
+pathname = 'C:\\Users\Joshua\Downloads\commute.json'
 with open(pathname, 'r') as f:
     data = json.load(f)
     
+pd.DataFrame.from_dict(data).groupby('name').get_group('steering_wheel_angle').plot(kind='line',x='timestamp',y='value',figsize=(25,15))
 
 
 
@@ -55,7 +56,7 @@ def process(x,memory):
         memory stores: weighted acc ped average, weighted speed average, 
                        latitude, longitude, Th history, dTh/dt history
     """
-    r = 0.01
+    r = 0.5
     if x['name'] == 'accelerator_pedal_position':
         memory['acc'] = r*x['value'] + (1-r)*memory['acc']
     elif x['name'] == 'vehicle_speed':
@@ -75,20 +76,37 @@ def calculate(memory):
     calculate risk factor based on memory
     """
     ThThr = 15
+    dThThr = 250
+    dTh = 0
     
-    x = [max(0,abs(i)-ThThr) for i in memory['Th']]
+    if memory['speed'] > 20 and sum(memory['dTh']) > dThThr:
+        print(memory['speed'])
+        return True
+    
+    x = [max(0,abs(i+50)-ThThr) for i in memory['Th']]
     Th = len([i for i in range(len(x)-1) if (memory['Th'][i] == 0) & (memory['Th'][i+1] > 0) ])
+    if Th > 5:
+        print(Th)
+        return True  
+    return False
         
-    
-    return Th
+period = 0
+for point in data:
+    if point['name'] == 'steering_wheel_angle':
+        if period == 0:
+            period = point['timestamp']
+        else:
+            period = point['timestamp'] - period
+            break
 
-
-memory = {'acc': 0, 'speed': 0, 'latitude': 0, 'longitude': 0, 'Th': FixedlenList(1200), 'dTh': FixedlenList(1200)}
+memory = {'acc': 0, 'speed': 0, 'latitude': 0, 'longitude': 0, 'Th': FixedlenList(int(50/period)), 'dTh': FixedlenList(int(0.3/period))}
 
 
 for point in data:
     process(point,memory)
-    print(calculate(memory))
+    calculate(memory)
+    #if calculate(memory):
+    #    print(True)
     
 
 
