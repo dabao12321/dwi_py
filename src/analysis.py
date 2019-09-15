@@ -40,16 +40,6 @@ the list size is fixed. overflow items will be discarded
 	def insert(self):
 		pass
 
-
-
-pathname = 'C:\\Users\Joshua\Downloads\commute.json'
-with open(pathname, 'r') as f:
-    data = json.load(f)
-    
-pd.DataFrame.from_dict(data).groupby('name').get_group('steering_wheel_angle').plot(kind='line',x='timestamp',y='value',figsize=(25,15))
-
-
-
 def process(x,memory):
     """
         updates memory based on inputs
@@ -70,11 +60,10 @@ def process(x,memory):
 
 def calculate(memory):
     """
-    calculate risk factor based on memory
+    determine whether driver is safe based on current state
     """
     ThThr = 15
     dThThr = 250
-    dTh = 0
     
     if memory['speed'] > 25 and sum(memory['dTh']) > dThThr:
         print(memory['speed'])
@@ -86,7 +75,10 @@ def calculate(memory):
         print(Th)
         return True  
     return False
-        
+
+"""
+for actual app, set period to period of json inputs
+"""        
 period = 0
 for point in data:
     if point['name'] == 'steering_wheel_angle':
@@ -105,6 +97,17 @@ def unsafe(point,memory):
     process(point,memory)
     return calculate(memory)  
 
+
+
+
+
+
+
+pathname = 'C:\\Users\Joshua\Downloads\commute.json'
+with open(pathname, 'r') as f:
+    data = json.load(f)
+    
+pd.DataFrame.from_dict(data).groupby('name').get_group('steering_wheel_angle').plot(kind='line',x='timestamp',y='value',figsize=(25,15))
 
 for point in data:
     unsafe(point,memory)
