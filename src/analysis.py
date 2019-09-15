@@ -56,11 +56,8 @@ def process(x,memory):
         memory stores: weighted acc ped average, weighted speed average, 
                        latitude, longitude, Th history, dTh/dt history
     """
-    r = 0.5
-    if x['name'] == 'accelerator_pedal_position':
-        memory['acc'] = r*x['value'] + (1-r)*memory['acc']
-    elif x['name'] == 'vehicle_speed':
-        memory['speed'] = r*x['value'] + (1-r)*memory['speed']
+    if x['name'] == 'vehicle_speed':
+        memory['speed'] = x['value']
     elif x['name'] == 'latitude':
         memory['latitude'] = x['value']
     elif x['name'] == 'longitude':
@@ -79,7 +76,7 @@ def calculate(memory):
     dThThr = 250
     dTh = 0
     
-    if memory['speed'] > 20 and sum(memory['dTh']) > dThThr:
+    if memory['speed'] > 25 and sum(memory['dTh']) > dThThr:
         print(memory['speed'])
         return True
     
@@ -101,12 +98,16 @@ for point in data:
 
 memory = {'acc': 0, 'speed': 0, 'latitude': 0, 'longitude': 0, 'Th': FixedlenList(int(50/period)), 'dTh': FixedlenList(int(0.3/period))}
 
+def unsafe(point,memory):
+    """
+    returns True if driver is unsafe based on new point
+    """
+    process(point,memory)
+    return calculate(memory)  
+
 
 for point in data:
-    process(point,memory)
-    calculate(memory)
-    #if calculate(memory):
-    #    print(True)
+    unsafe(point,memory)
     
 
 
