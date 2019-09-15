@@ -39,42 +39,74 @@ the list size is fixed. overflow items will be discarded
 
 	def insert(self):
 		pass
-
-def process(x,memory):
-    """
-        updates memory based on inputs
-        memory stores: weighted acc ped average, weighted speed average, 
-                       latitude, longitude, Th history, dTh/dt history
-    """
-    if x['name'] == 'vehicle_speed':
-        memory['speed'] = x['value']
-    elif x['name'] == 'latitude':
-        memory['latitude'] = x['value']
-    elif x['name'] == 'longitude':
-        memory['longitude'] = x['value']
-    elif x['name'] == 'steering_wheel_angle':
-        if len(memory['Th']) > 0:
-            memory['dTh'].append(x['value'] - memory['Th'][-1])
-        memory['Th'].append(x['value'])
-
-
-def calculate(memory):
-    """
-    determine whether driver is safe based on current state
-    """
-    ThThr = 15
-    dThThr = 250
     
-    if memory['speed'] > 25 and sum(memory['dTh']) > dThThr:
-        print(memory['speed'])
-        return True
+def distance(loc1,loc2):
+    dy = (loc1[1] - loc2[1])/69 
+    dx = (lat[0]-lat[0])/53
+    return (dx**2+dy**2)**0.5
+
+class Driver(object):
+    def __init__(self,period):
+        self.loc = [0,0]
+        self.speed = 0
+        self.Th = FixedlenList(int(50/period))
+        self.dTh = FixedlenList(int(0.3/period))
+        
+    def update(self,x):
+        """
+            updates memory based on inputs
+            memory stores: weighted acc ped average, weighted speed average, 
+                           latitude, longitude, Th history, dTh/dt history
+        """
+        if x['name'] == 'vehicle_speed':
+            self.speed = x['value']
+        elif x['name'] == 'latitude':
+            self.loc[1] = x['value']
+        elif x['name'] == 'longitude':
+            self.loc[0] = x['value']
+        elif x['name'] == 'steering_wheel_angle':
+            if len(self.Th) > 0:
+                self.dTh.append(x['value'] - self.Th[-1])
+            self.Th.append(x['value'])
     
-    x = [max(0,abs(i+50)-ThThr) for i in memory['Th']]
-    Th = len([i for i in range(len(x)-1) if (memory['Th'][i] == 0) & (memory['Th'][i+1] > 0) ])
-    if Th > 5:
-        print(Th)
-        return True  
-    return False
+    
+    def unsafe(self):
+        """
+        determine whether driver is safe based on current state
+        """
+        ThThr = 15
+        dThThr = 250
+        
+        if memory['speed'] > 25 and sum(memory['dTh']) > dThThr:
+            print(memory['speed'])
+            return True
+        
+        x = [max(0,abs(i+50)-ThThr) for i in memory['Th']]
+        Th = len([i for i in range(len(x)-1) if (memory['Th'][i] == 0) & (memory['Th'][i+1] > 0) ])
+        if Th > 5:
+            print(Th)
+            return True  
+        return False
+    
+    def ping(self,cars):
+        if self.unsafe():
+            dist = 10 * self.speed/3600
+            for car in cars:
+                if distance(car.loc,driver.loc) < dist:
+                    send_ping(car)
+    
+def send_ping(car):
+    car
+
+
+
+
+
+
+
+pathname = 'C:\\Users\Joshua\Downloads\commute.json'
+with open(pathname, 'r') as f:
+    data = json.load(f)
 
 """
 for actual app, set period to period of json inputs
@@ -89,61 +121,16 @@ for point in data:
             break
 
 memory = {'acc': 0, 'speed': 0, 'latitude': 0, 'longitude': 0, 'Th': FixedlenList(int(50/period)), 'dTh': FixedlenList(int(0.3/period))}
-
-def unsafe(point,memory):
-    """
-    returns True if driver is unsafe based on new point
-    """
-    process(point,memory)
-    return calculate(memory)  
-
-
-
-
-
-
-
-pathname = 'C:\\Users\Joshua\Downloads\commute.json'
-with open(pathname, 'r') as f:
-    data = json.load(f)
     
 pd.DataFrame.from_dict(data).groupby('name').get_group('steering_wheel_angle').plot(kind='line',x='timestamp',y='value',figsize=(25,15))
 
+car = Driver(period)
 for point in data:
-    unsafe(point,memory)
+    car.update(point)
+    car.unsafe()
     
 
 
 
         
 
-
-
-
-"""
-df = pd.DataFrame.from_dict(data)
-grouped = df.sort_values(by = ['name','timestamp']).groupby('name')
-for name, group in grouped:
-    if name in ['accelerator_pedal_position','vehicle_speed','steering_wheel_angle']:
-        group[['time_change','steering_change']] = group[['timestamp','value']].astype(float).diff()
-
-{'accelerator_pedal_position',
- 'brake_pedal_status',
- 'door_status',
- 'engine_speed',
- 'fine_odometer_since_restart',
- 'fuel_consumed_since_restart',
- 'fuel_level',
- 'headlamp_status',
- 'high_beam_status',
- 'ignition_status',
- 'latitude',
- 'longitude',
- 'odometer',
- 'parking_brake_status',
- 'powertrain_torque',
- 'steering_wheel_angle',
- 'transmission_gear_position',
- 'vehicle_speed',
- 'windshield_wiper_status'}
-"""
