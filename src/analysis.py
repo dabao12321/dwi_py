@@ -89,6 +89,9 @@ class Driver(object):
         return False
     
     def ping(self,cars):
+        """
+        determine which cars to ping if car is unsafe
+        """
         if self.unsafe():
             dist = 10 * self.speed/3600
             for car in cars:
@@ -96,6 +99,9 @@ class Driver(object):
                     send_ping(car)
     
 def send_ping(car):
+    """
+    tell the server to send the other car a message?
+    """
     car
 
 
