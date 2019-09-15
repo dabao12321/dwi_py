@@ -74,20 +74,25 @@ def calculate(memory):
     """
     calculate risk factor based on memory
     """
-    dThthreshold = 
-    Ththreshold = f(memory['latitude'],memory['longitude'])
+    dThthreshold = 5
+    ThVar = 15
     
     dTh = sum(i > dThthreshold for i in memory['dTh'])
     
-    return 
+    
+    x = [max(0,abs(i)-ThVar) for i in memory['Th']]
+    Th = len([i for i in range(len(x)-1) if (memory['Th'][i] == 0) & (memory['Th'][i+1] > 0) ])
+        
+    
+    return Th
 
 
-memory = {'acc': 0, 'speed': 0, 'latitude': 0, 'longitude': 0, 'Th': FixedlenList(500), 'dTh': FixedlenList(500)}
+memory = {'acc': 0, 'speed': 0, 'latitude': 0, 'longitude': 0, 'Th': FixedlenList(1200), 'dTh': FixedlenList(1200)}
 
 
 for point in data:
     process(point,memory)
-    calculate(memory)
+    print(calculate(memory))
     
 
 
