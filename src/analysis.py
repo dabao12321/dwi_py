@@ -74,13 +74,9 @@ def calculate(memory):
     """
     calculate risk factor based on memory
     """
-    dThthreshold = 5
-    ThVar = 15
+    ThThr = 15
     
-    dTh = sum(i > dThthreshold for i in memory['dTh'])
-    
-    
-    x = [max(0,abs(i)-ThVar) for i in memory['Th']]
+    x = [max(0,abs(i)-ThThr) for i in memory['Th']]
     Th = len([i for i in range(len(x)-1) if (memory['Th'][i] == 0) & (memory['Th'][i+1] > 0) ])
         
     
