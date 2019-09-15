@@ -10,7 +10,6 @@ def load_roads(filename):
     r = shapefile.Reader(shp=myshp, dbf=mydbf)
     return r
 
-    #will need to load in gml
 
 def in_polygon(lat, lon, shp, transform=False):
     all_shapes = shp.shapes() # get all the polygons
@@ -34,10 +33,10 @@ def in_polygon(lat, lon, shp, transform=False):
     return val
 
 if __name__ == "__main__":
-    myfile = load_roads("testroads")
+    myfile = load_roads("../data/testroads")
     print(myfile)
 
-    poly = load_roads("polytest")
+    poly = load_roads("../data/polytest")
     print(in_polygon(-71.0935, 42.3593, poly))
 
 
